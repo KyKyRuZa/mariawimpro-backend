@@ -3,6 +3,9 @@ const Coach = require('../models/coach');
 const path = require('path');
 const fs = require('fs');
 
+// Базовый путь для загрузки файлов
+const uploadPath = '/var/www/assets';
+
 // Получение всех фотографий галереи для конкретного тренера
 const getGalleryByCoachId = async (req, res) => {
   try {
@@ -31,7 +34,7 @@ const getGalleryByCoachId = async (req, res) => {
     const galleryWithUrls = gallery.map(item => {
       const galleryData = item.toJSON();
       if (galleryData.photoUrl) {
-        galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/uploads/${path.basename(galleryData.photoUrl)}`;
+        galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/assets/${galleryData.photoUrl}`;
       }
       return galleryData;
     });
@@ -72,7 +75,7 @@ const getGalleryItemById = async (req, res) => {
     // Добавляем полный URL к изображению
     const galleryData = galleryItem.toJSON();
     if (galleryData.photoUrl) {
-      galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/uploads/${path.basename(galleryData.photoUrl)}`;
+      galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/assets/${galleryData.photoUrl}`;
     }
 
     res.json({
@@ -124,7 +127,7 @@ const addToGallery = async (req, res) => {
 
     // Добавляем полный URL к изображению
     const galleryData = newGalleryItem.toJSON();
-    galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/uploads/${galleryData.photoUrl}`;
+    galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/assets/${galleryData.photoUrl}`;
 
     res.status(201).json({
       success: true,
@@ -172,7 +175,7 @@ const updateGalleryItem = async (req, res) => {
     if (req.file) {
       // Удаляем старое изображение
       if (galleryItem.photoUrl) {
-        const oldImagePath = path.join(__dirname, '../uploads', galleryItem.photoUrl);
+        const oldImagePath = path.join(uploadPath, galleryItem.photoUrl);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
@@ -184,7 +187,7 @@ const updateGalleryItem = async (req, res) => {
 
     // Добавляем полный URL к изображению
     const galleryData = galleryItem.toJSON();
-    galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/uploads/${galleryData.photoUrl}`;
+    galleryData.fullPhotoUrl = `${req.protocol}://${req.get('host')}/assets/${galleryData.photoUrl}`;
 
     res.json({
       success: true,
@@ -220,7 +223,7 @@ const deleteGalleryItem = async (req, res) => {
 
     // Удаляем изображение
     if (galleryItem.photoUrl) {
-      const imagePath = path.join(__dirname, '../uploads', galleryItem.photoUrl);
+      const imagePath = path.join(uploadPath, galleryItem.photoUrl);
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }

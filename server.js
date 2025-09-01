@@ -58,11 +58,8 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morganMiddleware);
+app.use('/assets', express.static('/var/www/assets'));
 
-// Статическая папка для загрузок
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// ИЛИ, если на VPS:
-// app.use('/uploads', express.static('/var/www/uploads'));
 
 // === API маршруты ===
 app.use('/api/coaches', coachRoutes);

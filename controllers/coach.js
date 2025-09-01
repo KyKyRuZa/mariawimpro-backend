@@ -2,6 +2,9 @@ const Coach = require('../models/coach');
 const path = require('path');
 const fs = require('fs');
 
+// Базовый путь для загрузки файлов
+const uploadPath = '/var/www/assets';
+
 // Получение всех тренеров
 const getAllCoaches = async (req, res) => {
   try {
@@ -13,7 +16,7 @@ const getAllCoaches = async (req, res) => {
     const coachesWithImageUrl = coaches.map(coach => {
       const coachData = coach.toJSON();
       if (coachData.photo) {
-        coachData.photoUrl = `${req.protocol}://${req.get('host')}/uploads/${path.basename(coachData.photo)}`;
+        coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
       }
       return coachData;
     });
@@ -47,7 +50,7 @@ const getCoachById = async (req, res) => {
     // Добавляем полный URL к изображению
     const coachData = coach.toJSON();
     if (coachData.photo) {
-      coachData.photoUrl = `${req.protocol}://${req.get('host')}/uploads/${path.basename(coachData.photo)}`;
+      coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
     }
     
     res.json({
@@ -100,7 +103,7 @@ const createCoach = async (req, res) => {
     
     // Добавляем полный URL к изображению
     const coachData = newCoach.toJSON();
-    coachData.photoUrl = `${req.protocol}://${req.get('host')}/uploads/${coachData.photo}`;
+    coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
     
     res.status(201).json({
       success: true,
@@ -152,7 +155,7 @@ const updateCoach = async (req, res) => {
     if (req.file) {
       // Удаляем старое изображение
       if (coach.photo) {
-        const oldImagePath = path.join(__dirname, '../uploads', coach.photo);
+        const oldImagePath = path.join(uploadPath, coach.photo);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
@@ -164,7 +167,7 @@ const updateCoach = async (req, res) => {
     
     // Добавляем полный URL к изображению
     const coachData = coach.toJSON();
-    coachData.photoUrl = `${req.protocol}://${req.get('host')}/uploads/${coachData.photo}`;
+    coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
     
     res.json({
       success: true,
@@ -200,7 +203,7 @@ const deleteCoach = async (req, res) => {
     
     // Удаляем изображение
     if (coach.photo) {
-      const imagePath = path.join(__dirname, '../uploads', coach.photo);
+      const imagePath = path.join(uploadPath, coach.photo);
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
