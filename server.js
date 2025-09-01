@@ -16,6 +16,7 @@ const authRoutes = require('./routes/auth');
 const galleryRoutes = require('./routes/gallery');
 // Загружаем .env
 dotenv.config();
+require('./models/associations');
 
 // Импортируем базу данных
 const { sequelize } = require('./database');
