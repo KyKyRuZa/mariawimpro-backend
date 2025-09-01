@@ -154,7 +154,7 @@ const startServer = async () => {
         console.log(`🌐 Доступно по: https://mariaswimpro.ru:${PORT}`);
       });
     } else {
-      app.listen(PORT, '0.0.0.0', () => {
+      app.listen(PORT, 'localhost', () => {
         console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
         console.log(`🌐 Доступно по: http://mariaswimpro.ru:${PORT}`);
       });
