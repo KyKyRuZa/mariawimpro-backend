@@ -114,23 +114,7 @@ app.use((err, req, res, next) => {
     ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 });
-
-// === SSL Configuration ===
-let sslOptions = null;
-if (process.env.USE_HTTPS === 'true') {
-  try {
-    sslOptions = {
-      key: fs.readFileSync(process.env.SSL_KEY_PATH, 'utf8'),
-      cert: fs.readFileSync(process.env.SSL_CERT_PATH, 'utf8'),
-      ca: fs.readFileSync('/etc/letsencrypt/live/mariaswimpro.ru/chain.pem', 'utf8')
-    };
-    console.log('✅ SSL сертификаты загружены');
-  } catch (error) {
-    console.error('❌ Ошибка загрузки SSL сертификатов:', error.message);
-    process.exit(1);
-  }
-}
-
+console.log('⚠️  SSL обрабатывается Nginx. Сервер работает по HTTP.');
 // === Запуск сервера ===
 const startServer = async () => {
   try {
@@ -148,17 +132,11 @@ const startServer = async () => {
       console.log('🔁 База данных синхронизирована');
     }
 
-    if (process.env.USE_HTTPS === 'true' && sslOptions) {
-      https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
-        console.log(`🔒 HTTPS сервер запущен на порту ${PORT}`);
-        console.log(`🌐 Доступно по: https://mariaswimpro.ru:${PORT}`);
-      });
-    } else {
-      app.listen(PORT, 'localhost', () => {
-        console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
-        console.log(`🌐 Доступно по: http://mariaswimpro.ru:${PORT}`);
-      });
-    }
+    app.listen(PORT, '127.0.0.1', () => {
+      console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
+      console.log(`🌐 Доступно только локально: http://127.0.0.1:${PORT}`);
+      console.log(`🔐 Внешний доступ через: https://mariaswimpro.ru`);
+    });
 
     // Graceful shutdown
     process.on('SIGTERM', () => {
