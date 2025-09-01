@@ -2,21 +2,26 @@ const Coach = require('../models/coach');
 const path = require('path');
 const fs = require('fs');
 
-// Базовый путь для загрузки файлов
 const uploadPath = '/var/www/assets';
 
-// Получение всех тренеров
+const getBaseUrl = (req) => {
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://mariaswimpro.ru'  // HTTPS для продакшена
+    : `${req.protocol}://${req.get('host')}`; // Для разработки
+};
+
 const getAllCoaches = async (req, res) => {
   try {
     const coaches = await Coach.findAll({
       order: [['createdAt', 'DESC']]
     });
     
-    // Добавляем полный URL к изображениям
+    const baseUrl = getBaseUrl(req);
+    
     const coachesWithImageUrl = coaches.map(coach => {
       const coachData = coach.toJSON();
       if (coachData.photo) {
-        coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
+        coachData.photoUrl = `${baseUrl}/assets/${coachData.photo}`;
       }
       return coachData;
     });
@@ -34,7 +39,6 @@ const getAllCoaches = async (req, res) => {
   }
 };
 
-// Получение одного тренера по ID
 const getCoachById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -47,10 +51,11 @@ const getCoachById = async (req, res) => {
       });
     }
     
-    // Добавляем полный URL к изображению
+    const baseUrl = getBaseUrl(req);
     const coachData = coach.toJSON();
+    
     if (coachData.photo) {
-      coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
+      coachData.photoUrl = `${baseUrl}/assets/${coachData.photo}`;
     }
     
     res.json({
@@ -66,12 +71,10 @@ const getCoachById = async (req, res) => {
   }
 };
 
-// Создание нового тренера
 const createCoach = async (req, res) => {
   try {
     const { fullName, education, specialization, merits, experience, description } = req.body;
     
-    // Проверяем, загружено ли изображение
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -79,9 +82,7 @@ const createCoach = async (req, res) => {
       });
     }
     
-    // Валидация обязательных полей
     if (!fullName || !education || !specialization || !merits || !experience || !description) {
-      // Удаляем загруженный файл, если валидация не прошла
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
@@ -93,7 +94,7 @@ const createCoach = async (req, res) => {
     
     const newCoach = await Coach.create({
       fullName,
-      photo: req.file.filename, // Сохраняем имя файла
+      photo: req.file.filename,
       education,
       specialization,
       merits,
@@ -101,9 +102,9 @@ const createCoach = async (req, res) => {
       description
     });
     
-    // Добавляем полный URL к изображению
+    const baseUrl = getBaseUrl(req);
     const coachData = newCoach.toJSON();
-    coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
+    coachData.photoUrl = `${baseUrl}/assets/${coachData.photo}`;
     
     res.status(201).json({
       success: true,
@@ -111,7 +112,6 @@ const createCoach = async (req, res) => {
       data: coachData
     });
   } catch (error) {
-    // Удаляем загруженный файл при ошибке
     if (req.file) {
       fs.unlinkSync(req.file.path);
     }
@@ -123,7 +123,6 @@ const createCoach = async (req, res) => {
   }
 };
 
-// Обновление тренера
 const updateCoach = async (req, res) => {
   try {
     const { id } = req.params;
@@ -132,7 +131,6 @@ const updateCoach = async (req, res) => {
     const coach = await Coach.findByPk(id);
     
     if (!coach) {
-      // Удаляем загруженный файл, если тренер не найден
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
@@ -151,9 +149,7 @@ const updateCoach = async (req, res) => {
       description: description || coach.description
     };
     
-    // Если загружено новое изображение
     if (req.file) {
-      // Удаляем старое изображение
       if (coach.photo) {
         const oldImagePath = path.join(uploadPath, coach.photo);
         if (fs.existsSync(oldImagePath)) {
@@ -165,9 +161,9 @@ const updateCoach = async (req, res) => {
     
     await coach.update(updateData);
     
-    // Добавляем полный URL к изображению
+    const baseUrl = getBaseUrl(req);
     const coachData = coach.toJSON();
-    coachData.photoUrl = `${req.protocol}://${req.get('host')}/assets/${coachData.photo}`;
+    coachData.photoUrl = `${baseUrl}/assets/${coachData.photo}`;
     
     res.json({
       success: true,
@@ -175,7 +171,6 @@ const updateCoach = async (req, res) => {
       data: coachData
     });
   } catch (error) {
-    // Удаляем загруженный файл при ошибке
     if (req.file) {
       fs.unlinkSync(req.file.path);
     }
@@ -187,7 +182,6 @@ const updateCoach = async (req, res) => {
   }
 };
 
-// Удаление тренера
 const deleteCoach = async (req, res) => {
   try {
     const { id } = req.params;
@@ -201,7 +195,6 @@ const deleteCoach = async (req, res) => {
       });
     }
     
-    // Удаляем изображение
     if (coach.photo) {
       const imagePath = path.join(uploadPath, coach.photo);
       if (fs.existsSync(imagePath)) {
