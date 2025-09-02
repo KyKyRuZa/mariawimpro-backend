@@ -33,6 +33,10 @@ const Coach = sequelize.define('Coach', {
     allowNull: false,
     comment: 'Стаж работы в годах'
   },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   description: {
     type: DataTypes.TEXT,
     allowNull: false
@@ -40,7 +44,7 @@ const Coach = sequelize.define('Coach', {
 }, {
   tableName: 'coaches',
   timestamps: true,
-  underscored: true // Для автоматического преобразования camelCase в snake_case
+  underscored: true 
 });
 
 module.exports = Coach;

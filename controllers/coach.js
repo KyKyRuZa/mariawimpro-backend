@@ -6,8 +6,8 @@ const uploadPath = '/var/www/assets';
 
 const getBaseUrl = (req) => {
   return process.env.NODE_ENV === 'production' 
-    ? 'https://mariaswimpro.ru'  // HTTPS для продакшена
-    : `${req.protocol}://${req.get('host')}`; // Для разработки
+    ? 'https://mariaswimpro.ru'
+    : `${req.protocol}://${req.get('host')}`;
 };
 
 const getAllCoaches = async (req, res) => {
@@ -73,7 +73,7 @@ const getCoachById = async (req, res) => {
 
 const createCoach = async (req, res) => {
   try {
-    const { fullName, education, specialization, merits, experience, description } = req.body;
+    const { fullName, education, specialization, merits, experience, description, phone } = req.body;
     
     if (!req.file) {
       return res.status(400).json({
@@ -82,7 +82,7 @@ const createCoach = async (req, res) => {
       });
     }
     
-    if (!fullName || !education || !specialization || !merits || !experience || !description) {
+    if (!fullName || !education || !specialization || !merits || !experience || !description || !phone) {
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
@@ -99,6 +99,7 @@ const createCoach = async (req, res) => {
       specialization,
       merits,
       experience,
+      phone: phone || null,
       description
     });
     
@@ -126,7 +127,7 @@ const createCoach = async (req, res) => {
 const updateCoach = async (req, res) => {
   try {
     const { id } = req.params;
-    const { fullName, education, specialization, merits, experience, description } = req.body;
+    const { fullName, education, specialization, merits, experience, description, phone } = req.body;
     
     const coach = await Coach.findByPk(id);
     
@@ -146,6 +147,7 @@ const updateCoach = async (req, res) => {
       specialization: specialization || coach.specialization,
       merits: merits || coach.merits,
       experience: experience || coach.experience,
+      phone: phone !== undefined ? phone : coach.phone,
       description: description || coach.description
     };
     
