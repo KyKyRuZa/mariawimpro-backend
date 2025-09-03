@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/multer');
+const {upload,handleMulterError } = require('../middleware/multer');
 const {
   getAllCoaches,
   getCoachById,
@@ -11,8 +11,8 @@ const {
 
 router.get('/', getAllCoaches);
 router.get('/:id', getCoachById);
-router.post('/', upload.single('photo'), createCoach); 
-router.put('/:id', upload.single('photo'), updateCoach);
+router.post('/', upload.single('photo'),handleMulterError, createCoach); 
+router.put('/:id', upload.single('photo'),handleMulterError, updateCoach);
 router.delete('/:id', deleteCoach);
 
 module.exports = router;
