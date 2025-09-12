@@ -1,121 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const https = require('https');
+require('dotenv').config();
+const app = require('./app');
+const { sequelize } = require('./database');
+const logger = require('./config/logger');
 const fs = require('fs');
-const morgan = require('morgan');
-const path = require('path');
-const winston = require('winston');
-const { format, transports } = winston;
-const { combine, printf } = format;
 
-const coachRoutes = require('./routes/coach');
-const newsRoutes = require('./routes/news');
-const tariffsRoutes = require('./routes/tariffs');
-const authRoutes = require('./routes/auth');
-const galleryRoutes = require('./routes/gallery');
-
-// Загружаем .env
-dotenv.config();
 require('./models/associations');
 
-// Импортируем базу данных
-const { sequelize } = require('./database');
-
-const app = express();
 const PORT = process.env.PORT || 3001;
 
-// === Формат логов ===
-const logFormat = printf(({ level, message, timestamp }) => {
-  return `[${timestamp}] [${level.toUpperCase()}]: ${message}`;
-});
-
-const logger = winston.createLogger({
-  level: 'info',
-  format: combine(
-    format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    logFormat
-  ),
-  transports: [
-    new transports.Console(),
-    new transports.File({ 
-      filename: '/var/log/nodejs/mariaswimpro.log',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5
-    })
-  ],
-});
-
-// === Morgan с датой ===
-const morganMiddleware = morgan((tokens, req, res) => {
-  const date = new Date().toISOString().replace('T', ' ').split('.')[0];
-  const method = tokens.method(req, res);
-  const url = tokens.url(req, res);
-  const status = tokens.status(req, res);
-  const responseTime = tokens['response-time'](req, res);
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  return `[${date}] ${ip} ${method} ${url} ${status} ${responseTime} ms`;
-}, {
-  stream: { write: (message) => logger.info(message.trim()) }
-});
-
-// === CORS Configuration ===
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
-
-const corsOptions = {
-  origin:allowedOrigins,
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(morganMiddleware);
-
-// Serve static files from correct path
-app.use('/assets', express.static('/var/www/assets', {
-  maxAge: '1y',
-  setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'public, immutable');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-}));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// === API маршруты ===
-app.use('/api/coaches', coachRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/tariffs', tariffsRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/gallery', galleryRoutes);
-
-// === Централизованная обработка ошибок ===
-app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', err.stack);
-  logger.error(`Ошибка: ${err.message} - Stack: ${err.stack}`);
-  
-  res.status(err.status || 500).json({ 
-    success: false, 
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal Server Error' 
-      : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
-  });
-});
-console.log('⚠️  SSL обрабатывается Nginx. Сервер работает по HTTP.');
-// === Запуск сервера ===
 const startServer = async () => {
   try {
     // Создаем директорию для логов
@@ -136,6 +28,7 @@ const startServer = async () => {
       console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
       console.log(`🌐 Доступно только локально: http://127.0.0.1:${PORT}`);
       console.log(`🔐 Внешний доступ через: https://mariaswimpro.ru`);
+      console.log(`🛡️  Защита Helmet и Rate Limit активирована`);
     });
 
     // Graceful shutdown
