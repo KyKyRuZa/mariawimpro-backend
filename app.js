@@ -18,8 +18,8 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmetConfig);
 app.use(cors);
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(morganMiddleware);
 
 // Rate limiting
