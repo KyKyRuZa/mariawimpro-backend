@@ -33,6 +33,15 @@ app.get('/health', (req, res) => {
 
 app.use('/api', routes);
 
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Маршрут не найден',
+    path: req.originalUrl,
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.use(errorHandler);
 
 module.exports = app;
