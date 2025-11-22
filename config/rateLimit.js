@@ -1,34 +1,57 @@
+
 const rateLimit = require('express-rate-limit');
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Слишком много попыток входа. Пожалуйста, попробуйте позже.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const createLimiter = (windowMs, max, message, skipSuccessfulRequests = false) => 
+  rateLimit({
+    windowMs,
+    max,
+    message: {
+      error: 'Too Many Requests',
+      message,
+      retryAfter: Math.ceil(windowMs / 1000 / 60) + ' minutes'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: skipSuccessfulRequests,
+    handler: (req, res) => {
+      logger.warn(`Rate limit exceeded for ${req.ip} on ${req.path}`);
+      res.status(429).json({
+        error: 'Too Many Requests',
+        message,
+        retryAfter: Math.ceil(windowMs / 1000 / 60) + ' minutes'
+      });
+    }
+  });
 
-const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: 'Слишком много загрузок. Попробуйте позже.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const authLimiter = createLimiter(
+  15 * 60 * 1000,
+  5,
+  'Слишком много попыток входа. Пожалуйста, попробуйте позже.',
+  true
+);
 
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Слишком много запросов. Попробуйте позже.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    return req.url === '/health' || req.url.startsWith('/assets/');
-  }
-});
+const uploadLimiter = createLimiter(
+  15 * 60 * 1000,
+  10,
+  'Слишком много загрузок. Попробуйте позже.'
+);
+
+const generalLimiter = createLimiter(
+  15 * 60 * 1000,
+  100,
+  'Слишком много запросов. Попробуйте позже.'
+);
+
+const strictLimiter = createLimiter(
+  60 * 60 * 1000,
+  3,
+  'Превышен лимит безопасности. Попробуйте через час.',
+  true
+);
 
 module.exports = {
   authLimiter,
   uploadLimiter,
-  generalLimiter
+  generalLimiter,
+  strictLimiter
 };
