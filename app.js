@@ -3,7 +3,14 @@ const path = require('path');
 const fs = require('fs');
 
 const { helmetConfig, cors } = require('./config/security');
-const { authLimiter, uploadLimiter, generalLimiter } = require('./config/rateLimit');
+const { 
+  authLimiter, 
+  uploadLimiter, 
+  generalLimiter,
+  healthLimiter,
+  staticLimiter 
+} = require('./config/rateLimit'); 
+
 const logger = require('./config/logger');
 const morganMiddleware = require('./middleware/morgan');
 const errorHandler = require('./middleware/errorHandler');
@@ -19,9 +26,12 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(morganMiddleware);
 
+
 app.use('/api/auth', authLimiter);
 app.use('/api/gallery', uploadLimiter);
 app.use('/api', generalLimiter);
+app.use('/health', healthLimiter); 
+app.use('/assets', staticLimiter); 
 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
