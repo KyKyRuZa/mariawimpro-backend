@@ -19,7 +19,6 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(morganMiddleware);
 
-
 app.use('/api/auth', authLimiter);
 app.use('/api/gallery', uploadLimiter);
 app.use('/api', generalLimiter);
@@ -29,6 +28,13 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
+  });
+});
+
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Маршрут не найден',
+    path: req.originalUrl
   });
 });
 
