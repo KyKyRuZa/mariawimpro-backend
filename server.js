@@ -22,6 +22,7 @@ const startServer = async () => {
 
     app.listen(PORT, '127.0.0.1', () => {
       console.log(`🚀 HTTP сервер запущен на порту ${PORT}`);
+
     });
 
     process.on('SIGTERM', () => {
