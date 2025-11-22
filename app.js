@@ -31,13 +31,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Маршрут не найден',
-    path: req.originalUrl
-  });
-});
-
 app.use('/api', routes);
 
 app.use(errorHandler);
