@@ -17,12 +17,12 @@ const News = sequelize.define('News', {
   },
   extra: {
     type: DataTypes.TEXT,
-    allowNull: true // Поле необязательное
+    allowNull: true
   },
   promo: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false // По умолчанию новость не промо
+    defaultValue: false 
   }
 }, {
   tableName: 'news',
